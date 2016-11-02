@@ -1,0 +1,51 @@
+{
+  "manifest_version": 2,
+  "name": "Chrome Nuke",
+  "version": "0.1.0",
+  "author": "Nicholas Tieman",
+  "description": "Remove annoying page elements with a click.",
+  "permissions": [
+    "activeTab",
+    "http://*/",
+    "https://*/"
+  ],
+  "browser_action": {
+    "default_icon": "img/icon-bomb-16.png",
+    "default_popup": "html/popup.html",
+    "default_title": "Click to Nuke"
+  },
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "windows": "Ctrl+Shift+X",
+        "mac": "Command+Shift+X",
+        "chromeos": "Ctrl+Shift+X",
+        "linux": "Ctrl+Shift+X"
+      }
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "css": [
+        "css/content_style.css"
+      ],
+      "js": [
+        "js/content_script.js"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "img/icon-bomb-16.png",
+    "48": "img/icon-bomb-48.png",
+    "128": "img/icon-bomb-128.png"
+  },
+  "incognito": "split",
+  "offline_enabled": true,
+  "web_accessible_resources": [
+    "img/fire.gif"
+  ]
+}
