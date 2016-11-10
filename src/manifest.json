@@ -46,6 +46,29 @@
   "incognito": "split",
   "offline_enabled": true,
   "web_accessible_resources": [
-    "img/fire.gif"
+    "img/fire/fire-01.png",
+    "img/fire/fire-02.png",
+    "img/fire/fire-03.png",
+    "img/fire/fire-04.png",
+    "img/fire/fire-05.png",
+    "img/fire/fire-06.png",
+    "img/fire/fire-07.png",
+    "img/fire/fire-08.png",
+    "img/fire/fire-09.png",
+    "img/fire/fire-10.png",
+    "img/fire/fire-11.png",
+    "img/fire/fire-12.png",
+    "img/fire/fire-13.png",
+    "img/fire/fire-14.png",
+    "img/fire/fire-15.png",
+    "img/fire/fire-16.png",
+    "img/fire/fire-17.png",
+    "img/fire/fire-18.png",
+    "img/fire/fire-19.png",
+    "img/fire/fire-20.png",
+    "img/fire/fire-21.png",
+    "img/fire/fire-22.png",
+    "img/fire/fire-23.png",
+    "img/fire/fire-24.png"
   ]
 }

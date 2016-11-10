@@ -5,6 +5,100 @@ var targetSize = 400;
 overlay.setAttribute('id', 'chrome-nuke-overlay');
 document.body.appendChild(overlay);
 
+function animateFire(x, y) {
+    var fire = document.createElement('div');
+    var fireSizeRandom = Math.floor(Math.random() * 50 - 25);
+    var fireWidth = 75 + fireSizeRandom;
+    var fireHeight = 179 + fireSizeRandom;
+
+    fire.classList.add('chrome-nuke-fire');
+
+    fire.style.width = fireWidth + 'px';
+    fire.style.height = fireHeight + 'px';
+    fire.style.top = (y - fireHeight) + 'px';
+    fire.style.left = (x - fireWidth / 2) + 'px';
+    fire.style.zIndex = 999999 + y;
+    
+    document.body.appendChild(fire);
+    console.log('Explosion animation initialized.');
+
+    var frame = 1;
+
+    var doFireFrame = function() {
+        var frameString = frame.toString();
+
+        if(frameString.length === 1) {
+            frameString = '0' + frameString;
+        }
+
+        fire.style.backgroundImage = 'url(' + chrome.extension.getURL('img/fire/fire-' + frameString + '.png') + ')';
+
+        frame++;
+
+        if(frame > 24) {
+            fire.parentNode.removeChild(fire);
+        } else {
+            console.log('Fire animation removed.');
+            setTimeout(doFireFrame, 1000 / 24);
+        }
+    };
+
+    doFireFrame();
+
+    var targets = getTargetsAt(x, y);
+    var targetsLength = targets.length;
+
+    for(var i = 0; i < targetsLength; i++) {
+        var target = targets[i];
+
+        if(target.parentNode) {
+            console.log(target);
+            target.parentNode.removeChild(target);
+        }
+    }
+
+    overlay.classList.remove('active');
+    console.log('Target removed.');
+}
+
+function getTargetsAt(x, y) {
+    var targets = document.elementsFromPoint(x, y);
+
+    if(targets && targets.length) {
+        targets = targets.filter(function (target) {
+            return ['HTML', 'BODY'].indexOf(target.tagName) === -1 && !target.classList.contains('chrome-nuke-fire');
+        });
+
+        targets.sort(function (a, b) {
+            return a.offsetWidth - b.offsetWidth;
+        });
+
+        console.log(targets);
+
+        for (var i = 0; i < targets.length; i++) {
+            if (targets[i].offsetWidth >= targetSize && targets[i].offsetHeight >= targetSize) {
+                break;
+            }
+        }
+
+        if (i !== targets.length) {
+            if (i === 0) {
+                i = 1;
+            }
+
+            targets.splice(i, targets.length - (i - 1));
+        }
+    }
+
+    console.log(targets);
+
+    if(!targets) {
+        targets = [];
+    }
+
+    return targets;
+}
+
 function onOverlayClick(e) {
     console.log('Overlay clicked.');
 
@@ -12,102 +106,69 @@ function onOverlayClick(e) {
     e.stopPropagation();
 
     overlay.classList.remove('active');
+    overlay.removeEventListener('click', onOverlayClick, false);
 
     setTimeout(function() {
         console.log('Target timeout activated.');
 
-        var targets = document.elementsFromPoint(e.pageX - document.body.scrollLeft, e.pageY - document.body.scrollTop);
+        var type = overlay.getAttribute('data-type');
 
-        overlay.classList.add('active');
+        switch(type) {
+            case 'cluster':
+                var ySpread = 100;
+                var xStep = 25;
+                var radius = 100;
+                var xCenter = 0;
+                var yCenter = e.pageY - document.body.scrollTop;
+                var bombDelay = 100;
+                var bombDelayRandom = 25;
 
-        if(targets && targets.length) {
-            targets.filter(function(target) {
-                return ['html', 'body'].indexOf(target) === -1;
-            });
+                var nextBomb = function() {
+                    var x = xCenter + Math.floor(Math.random() * radius) - (radius / 2);
+                    var y = yCenter + Math.floor(Math.random() * radius) - (radius / 2);
 
-            targets.sort(function(a, b) {
-                return a.offsetWidth - b.offsetWidth;
-            });
+                    animateFire(x, y);
 
-            console.log(targets);
+                    xCenter += xStep;
 
-            for(var i = 0; i < targets.length; i++) {
-                console.log(targets[i].offsetWidth);
-                console.log(targets[i].offsetHeight);
-                if(targets[i].offsetWidth >= targetSize && targets[i].offsetHeight >= targetSize) {
-                    break;
-                }
-            }
+                    if(xCenter < window.innerWidth) {
+                        setTimeout(nextBomb, bombDelay + Math.floor(Math.random() * bombDelayRandom) - bombDelayRandom / 2);
+                    }
+                };
 
-            if(i !== targets.length) {
-                if(i === 0) {
-                    i = 1;
-                }
+                nextBomb();
 
-                targets.splice(i, targets.length - (i - 1));
-            }
+                break;
+            case 'single':
+            default:
+                var x = e.pageX - document.body.scrollLeft;
+                var y = e.pageY - document.body.scrollTop;
+                var targets = getTargetsAt(x, y);
 
-            console.log(targets);
+                responder({href: window.location.href, targets: targets});
+                animateFire(x, y);
 
-            responder({href: window.location.href, targets: targets});
-            console.log('Extension message sent.');
-            
-            var fire = document.createElement('img');
-            var fireWidth = 75;
-            var fireHeight = 179;
-
-            fire.style.setProperty('position', 'absolute');
-            fire.style.setProperty('top', (e.pageY - fireHeight) + 'px');
-            fire.style.setProperty('left', (e.pageX - fireWidth / 2) + 'px');
-            fire.style.setProperty('width', fireWidth + 'px');
-            fire.style.setProperty('height', fireHeight + 'px');
-            fire.style.setProperty('z-index', '999999');
-
-            fire.setAttribute('src', chrome.extension.getURL('img/fire.gif'));
-
-            document.body.appendChild(fire);
-            console.log('Explosion animation initialized.');
-
-            setTimeout(function() {
-                var targetsLength = targets.length;
-
-                for(var i = 0; i < targetsLength; i++) {
-                    var target = targets[i];
-
-                    target.parentNode.removeChild(target);
-                }
-
-                fire.parentNode.removeChild(fire);
-                overlay.classList.remove('active');
-                console.log('Target and animation removed.');
-            }, 1000);
+                break;
         }
     }, 0);
-
-    overlay.removeEventListener('click', onOverlayClick, false);
 }
 
-function arm() {
+function arm(type) {
     overlay.classList.add('active');
     overlay.addEventListener('click', onOverlayClick, false);
+    overlay.setAttribute('data-type', type);
     overlay.focus();
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log(request);
+
     switch(request.action) {
         case 'arm':
-            arm();
+            arm(request.type);
             break;
     }
 
     responder = sendResponse;
 });
 
-chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
-    alert(request);
-    if(request.action === 'arm') {
-        arm();
-    }
-
-    sendResponse();
-});
